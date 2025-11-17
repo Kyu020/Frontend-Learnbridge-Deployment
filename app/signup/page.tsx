@@ -44,7 +44,7 @@ export default function SignupPage() {
     }
 
     try {
-      const res = await api.post("/auth/register", { username, studentId, program, password })
+      const res = await api.post("/api/auth/register", { username, studentId, program, password })
       if (res.status === 201) {
         router.push("/login")
       } else {

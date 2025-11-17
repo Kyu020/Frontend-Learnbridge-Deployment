@@ -4,7 +4,7 @@ import { Tutor } from "@/interfaces/tutors.interfaces"
 import { DashboardData } from "@/interfaces/dashboard.interfaces";
 
 class DashboardService {
-    private baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+    private baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
     private getToken(): string {
         if (typeof window === 'undefined') {
@@ -39,17 +39,17 @@ class DashboardService {
     }
 
     async fetchResources(): Promise<Resource[]> {
-        const data = await this.fetchWithAuth<{ resources: Resource []}>(`${this.baseUrl}/upload/getallfile`);
+        const data = await this.fetchWithAuth<{ resources: Resource []}>(`${this.baseUrl}/api/upload/getallfile`);
         return data.resources || [];
     }
 
     async fetchTutors(): Promise<Tutor[]> {
-        const data = await this.fetchWithAuth<{ tutors: Tutor[]}>(`${this.baseUrl}/tutor/getalltutor`);
+        const data = await this.fetchWithAuth<{ tutors: Tutor[]}>(`${this.baseUrl}/api/tutor/getalltutor`);
         return data.tutors || [];
     }  
 
     async fetchCurrentUser(): Promise<UserProfile | null> {
-        const data = await this.fetchWithAuth<{user: UserProfile | null}>(`${this.baseUrl}/auth/me`);
+        const data = await this.fetchWithAuth<{user: UserProfile | null}>(`${this.baseUrl}/api/auth/me`);
         return data.user || null;
     }
 

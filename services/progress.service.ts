@@ -1,6 +1,6 @@
 import { ProgressData } from '@/interfaces/progress.interfaces';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 const getAuthToken = (): string | null => {
   if (typeof window !== 'undefined') {
@@ -22,7 +22,7 @@ export const ProgressService = {
       throw new Error("No authentication token found. Please log in again.");
     }
 
-    const response = await fetch(`${API_BASE_URL}/analytics/getuseranalytics`, {
+    const response = await fetch(`${API_BASE_URL}/api/analytics/getuseranalytics`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });

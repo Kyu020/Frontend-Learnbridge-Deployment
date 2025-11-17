@@ -1,7 +1,7 @@
 import { Resource, UploadResourceData, FavoriteAction } from "@/interfaces/resources.interfaces";
 
 class ResourcesService {
-    private baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+    private baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
     private getToken(): string {
         if (typeof window === 'undefined') {
@@ -36,23 +36,23 @@ class ResourcesService {
     }
 
     async fetchResources(): Promise<Resource[]>{
-        const data = await this.fetchWithAuth<{ resources: Resource[] }>(`${this.baseUrl}/upload/getallfile`);
+        const data = await this.fetchWithAuth<{ resources: Resource[] }>(`${this.baseUrl}/api/upload/getallfile`);
         return data.resources || [];
     }
 
     async fetchResourceById(resourceId: string): Promise<Resource> {
-        const data = await this.fetchWithAuth<{ resource: Resource }>(`${this.baseUrl}/upload/getfile/${resourceId}`);
+        const data = await this.fetchWithAuth<{ resource: Resource }>(`${this.baseUrl}/api/upload/getfile/${resourceId}`);
         return data.resource;
     }
 
     async recordResourceView(resourceId: string): Promise<Resource> {
         // This endpoint both fetches the file and records a view
-        const data = await this.fetchWithAuth<{ resource: Resource }>(`${this.baseUrl}/upload/getfile/${resourceId}`);
+        const data = await this.fetchWithAuth<{ resource: Resource }>(`${this.baseUrl}/api/upload/getfile/${resourceId}`);
         return data.resource;
     }
 
     async fetchFavorites(): Promise<string[]> {
-        const data = await this.fetchWithAuth<{ favorites: any[] }>(`${this.baseUrl}/favorites/getfave`);
+        const data = await this.fetchWithAuth<{ favorites: any[] }>(`${this.baseUrl}/api/favorites/getfave`);
         
         return data.favorites
             .filter((fav: any) => fav.resourceId)
@@ -67,7 +67,7 @@ class ResourcesService {
         formData.append('course', uploadData.course);
         formData.append('file', uploadData.file);
 
-        const response = await fetch(`${this.baseUrl}/upload/uploadfile`, {
+        const response = await fetch(`${this.baseUrl}/api/upload/uploadfile`, {
             method: 'POST',
             headers: {
                 Authorization: `Bearer ${token}`,
@@ -84,14 +84,14 @@ class ResourcesService {
     }
 
     async addFavorite(resourceId: string): Promise<void> {
-        await this.fetchWithAuth(`${this.baseUrl}/favorites/addfave`, {
+        await this.fetchWithAuth(`${this.baseUrl}/api/favorites/addfave`, {
             method: 'POST',
             body: JSON.stringify({ resourceId }),
         });
     }
 
     async removeFavorite(resourceId: string): Promise<void> {
-        await this.fetchWithAuth(`${this.baseUrl}/favorites/removefave`, {
+        await this.fetchWithAuth(`${this.baseUrl}/api/favorites/removefave`, {
             method: 'POST',
             body: JSON.stringify({ resourceId }),
         });

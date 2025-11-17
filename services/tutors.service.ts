@@ -2,7 +2,7 @@
 import { Tutor, TutorFormData, ScheduleFormData, ProfilePicture } from '@/interfaces/tutors.interfaces';
 
 class TutorsService {
-  private baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+  private baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
   private getToken(): string {
     if (typeof window === 'undefined') {
@@ -72,7 +72,7 @@ class TutorsService {
 
   async fetchTutors(): Promise<Tutor[]> {
     try {
-      const data = await this.fetchWithAuth<{ tutors: any[] }>(`${this.baseUrl}/tutor/getalltutor`);
+      const data = await this.fetchWithAuth<{ tutors: any[] }>(`${this.baseUrl}/api/tutor/getalltutor`);
       
       if (!data.tutors || !Array.isArray(data.tutors)) {
         console.warn('No tutors array in response');
@@ -116,14 +116,14 @@ class TutorsService {
   }
 
   async fetchFavorites(): Promise<string[]> {
-    const data = await this.fetchWithAuth<{ favorites: any[] }>(`${this.baseUrl}/favorites/getfave`);
+    const data = await this.fetchWithAuth<{ favorites: any[] }>(`${this.baseUrl}/api/favorites/getfave`);
     return data.favorites
       ?.filter((fav: any) => fav.tutorId)
       .map((fav: any) => fav.tutorId) || [];
   }
 
   async verifyTutorProfile(): Promise<{ tutorProfile: Tutor | null }> {
-    const data = await this.fetchWithAuth<{ tutorProfile: any }>(`${this.baseUrl}/tutor/verifytutorprofile`);
+    const data = await this.fetchWithAuth<{ tutorProfile: any }>(`${this.baseUrl}/api/tutor/verifytutorprofile`);
     
     if (!data.tutorProfile) {
       return { tutorProfile: null };
@@ -157,7 +157,7 @@ class TutorsService {
   }
 
   async toggleTutorMode(studentId: string, isTutor: boolean): Promise<void> {
-    await this.fetchWithAuth(`${this.baseUrl}/tutor/toggletutormode/${studentId}`, {
+    await this.fetchWithAuth(`${this.baseUrl}/api/tutor/toggletutormode/${studentId}`, {
       method: 'PUT',
       body: JSON.stringify({ isTutor }),
     });
@@ -176,7 +176,7 @@ class TutorsService {
       modeOfTeaching: formData.modeOfTeaching
     };
 
-    const response = await this.fetchWithAuth<{ tutor: any }>(`${this.baseUrl}/tutor/createtutor`, {
+    const response = await this.fetchWithAuth<{ tutor: any }>(`${this.baseUrl}/api/tutor/createtutor`, {
       method: 'POST',
       body: JSON.stringify(formattedData),
     });
@@ -221,7 +221,7 @@ class TutorsService {
       modeOfTeaching: formData.modeOfTeaching
     };
 
-    const response = await this.fetchWithAuth<{ updatedProfile: any }>(`${this.baseUrl}/tutor/updatetutor`, {
+    const response = await this.fetchWithAuth<{ updatedProfile: any }>(`${this.baseUrl}/api/tutor/updatetutor`, {
       method: 'PUT',
       body: JSON.stringify(formattedData),
     });
@@ -265,21 +265,21 @@ class TutorsService {
       modality: scheduleData.modality
     };
 
-    await this.fetchWithAuth(`${this.baseUrl}/request/sendrequest`, {
+    await this.fetchWithAuth(`${this.baseUrl}/api/request/sendrequest`, {
       method: 'POST',
       body: JSON.stringify(formattedData),
     });
   }
 
   async addFavorite(tutorId: string): Promise<void> {
-    await this.fetchWithAuth(`${this.baseUrl}/favorites/addfave`, {
+    await this.fetchWithAuth(`${this.baseUrl}/api/favorites/addfave`, {
       method: 'POST',
       body: JSON.stringify({ tutorId }),
     });
   }
 
   async removeFavorite(tutorId: string): Promise<void> {
-    await this.fetchWithAuth(`${this.baseUrl}/favorites/removefave`, {
+    await this.fetchWithAuth(`${this.baseUrl}/api/favorites/removefave`, {
       method: 'POST',
       body: JSON.stringify({ tutorId }),
     });

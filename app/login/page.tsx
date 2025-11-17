@@ -33,7 +33,7 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      const response = await api.post("/auth/login", { studentId, password });
+      const response = await api.post("/api/auth/login", { studentId, password });
       const { token, user } = response.data;
 
       if (!token) throw new Error("Token not received");
