@@ -1,7 +1,7 @@
 import { Tutor, Review, ScheduleFormData, ReviewFormData, CompleteTutorProfile } from '@/interfaces/tutors.interfaces';
 
 class TutorProfileService {
-  private baseUrl = 'http://localhost:5000/api';
+  private baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
   private getToken(): string {
     if (typeof window === 'undefined') {

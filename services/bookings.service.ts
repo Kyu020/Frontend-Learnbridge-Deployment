@@ -2,7 +2,7 @@
 import { Booking, BookingsData, StudentInfo, TutorInfo, ProfilePicture } from '@/interfaces/bookings.interfaces';
 
 class BookingsService {
-  private baseUrl = 'http://localhost:5000/api'; // Update this to your backend URL
+  private baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'; // Update this to your backend URL
 
   private getToken(): string {
     if (typeof window === 'undefined') {

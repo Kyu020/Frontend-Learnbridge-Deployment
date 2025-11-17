@@ -2,7 +2,7 @@
 import { FavoriteItem, FavoritesResponse, RemoveFavoriteRequest, ProfilePicture } from '@/interfaces/favorites.interfaces';
 
 class FavoritesService {
-  private baseUrl = 'http://localhost:5000/api';
+  private baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
   private getToken(): string {
     if (typeof window === 'undefined') {
