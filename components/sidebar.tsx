@@ -3,6 +3,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import Image from "next/image"
 import { cn } from "@/lib/utils"
 import { LayoutDashboard, BookOpen, Users, Calendar, TrendingUp, Settings, Heart, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -57,9 +58,16 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
         <div className="flex h-full flex-col">
           {/* Logo */}
           <div className="flex h-16 items-center justify-between gap-2 border-b border-border px-6">
-            <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-purple-600">
-                <BookOpen className="h-5 w-5 text-white" />
+            <div className="flex items-center gap-3">
+              <div className="flex items-center">
+                <Image 
+                  src="/logo.jpg" // Update this path to match your logo file
+                  alt="LearnBridge Logo"
+                  width={32}
+                  height={32}
+                  className="w-8 h-8 object-contain"
+                  priority
+                />
               </div>
               <span className="text-xl font-bold text-foreground">LearnBridge</span>
             </div>
