@@ -71,7 +71,7 @@ class FavoritesService {
   }
 
   async getFavorites(): Promise<FavoriteItem[]> {
-    const data = await this.fetchWithAuth<FavoritesResponse>(`${this.baseUrl}/favorites/getfave`);
+    const data = await this.fetchWithAuth<FavoritesResponse>(`${this.baseUrl}/api/favorites/getfave`);
     
     // Normalize the favorites data to include profile pictures
     return (data.favorites || []).map(favorite => ({
@@ -84,7 +84,7 @@ class FavoritesService {
   }
 
   async removeFavorite(request: RemoveFavoriteRequest): Promise<void> {
-    await this.fetchWithAuth(`${this.baseUrl}/favorites/removefave`, {
+    await this.fetchWithAuth(`${this.baseUrl}/api/favorites/removefave`, {
       method: 'POST',
       body: JSON.stringify(request),
     });
