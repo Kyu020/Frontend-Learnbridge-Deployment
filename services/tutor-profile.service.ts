@@ -36,7 +36,7 @@ class TutorProfileService {
   }
 
   async fetchTutorProfile(studentId: string): Promise<{ data: CompleteTutorProfile }> {
-    return this.fetchWithAuth<{ data: CompleteTutorProfile }>(`${this.baseUrl}/tutor/gettutor/${studentId}`);
+    return this.fetchWithAuth<{ data: CompleteTutorProfile }>(`${this.baseUrl}/api/tutor/gettutor/${studentId}`);
   }
 
   async fetchTutorReviews(tutorId: string): Promise<Review[]> {
@@ -113,7 +113,7 @@ class TutorProfileService {
   }
 
   async removeFavorite(tutorId: string): Promise<void> {
-    await this.fetchWithAuth(`${this.baseUrl}/favorites/removefave`, {
+    await this.fetchWithAuth(`${this.baseUrl}/api/favorites/removefave`, {
       method: 'POST',
       body: JSON.stringify({ tutorId }),
     });
