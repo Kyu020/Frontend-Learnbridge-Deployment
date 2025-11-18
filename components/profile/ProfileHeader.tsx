@@ -63,7 +63,7 @@
         formData.append('profilePicture', file)
 
         const token = localStorage.getItem('token')
-        const response = await fetch('http://localhost:5000/api/profile/updateprofile', {
+        const response = await fetch('https://backend-learnbridge.onrender.com/api/profile/updateprofile', {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`,
