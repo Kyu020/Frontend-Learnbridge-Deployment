@@ -47,7 +47,7 @@ export const SentBookingCard = ({
 
   const handleJoinMeeting = () => {
     if (booking.roomId) {
-      const meetUrl = `http://localhost:3000/meeting/${booking.roomId}`;
+      const meetUrl = `https://learnbridge-dep-01.vercel.app/meeting/${booking.roomId}`;
       window.open(meetUrl, '_blank', 'noopener,noreferrer');
       
       if (onJoinMeeting) {

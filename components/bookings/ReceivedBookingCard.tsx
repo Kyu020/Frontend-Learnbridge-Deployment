@@ -90,7 +90,7 @@ export const ReceivedBookingCard = ({
   const handleJoinMeeting = () => {
     if (booking.roomId) {
       // Redirect to Jitsi Meet with the room ID
-      const meetUrl = `http://localhost:3000/meeting/${booking.roomId}`;
+      const meetUrl = `https://learnbridge-dep-01.vercel.app/meeting/${booking.roomId}`;
       window.open(meetUrl, '_blank', 'noopener,noreferrer');
       
       // Optional: Also call the callback if provided
