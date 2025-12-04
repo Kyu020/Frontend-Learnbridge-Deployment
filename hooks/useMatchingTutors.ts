@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Tutor } from '@/interfaces/tutors.interfaces';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/authContext';
 
 interface TutorMatch {
   tutor: Tutor;
@@ -21,18 +22,25 @@ export const useMatchingTutors = (): UseMatchingTutorsReturn => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const { user, isLoading:authLoading } = useAuth();
 
   const fetchMatchedTutors = async (): Promise<void> => {
     try {
       setLoading(true);
       setError(null);
 
-      const studentId = localStorage.getItem('studentId');
-      if (!studentId) {
-        throw new Error('Student ID not found. Please log in again.');
+      if (authLoading) {
+        // Wait until auth loading is done
+        return;
       }
 
+      if (!user) {
+        throw new Error('Please log in to use matching feature.');
+      }
+
+      const studentId = user.studentId;
       const token = localStorage.getItem('token');
+      
       if (!token) {
         throw new Error('Authentication token not found. Please log in again.');
       }

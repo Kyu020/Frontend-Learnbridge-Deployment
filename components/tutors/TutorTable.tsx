@@ -4,11 +4,6 @@ import { Heart, Calendar, User, Clock, Zap, Shield } from "lucide-react";
 import { Tutor, CompleteTutorProfile, ProfilePicture } from '@/interfaces/tutors.interfaces';
 import { useState } from "react";
 
-interface TutorMatch {
-  tutor: Tutor | CompleteTutorProfile;
-  score: number;
-}
-
 interface TutorTableProps {
   tutors: (Tutor | CompleteTutorProfile)[];
   favorites: Set<string>;
