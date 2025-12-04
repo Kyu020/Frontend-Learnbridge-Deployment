@@ -132,7 +132,7 @@ export const TutorCard = ({
             {/* Additional Info */}
             <div className="flex flex-wrap gap-3 text-xs sm:text-sm text-muted-foreground mb-4">
               {/* Availability */}
-              {tutor.availability && tutor.availability.length > 0 ? (
+              {tutor.availabilitySlots && tutor.availabilitySlots.length > 0 ? (
                 <span className="flex items-center gap-1">
                   <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
                   Available

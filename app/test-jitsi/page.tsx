@@ -25,7 +25,7 @@ export default function TestJitsi() {
       }
 
       // Create a test meeting via backend
-      const response = await fetch('http://localhost:5000/api/meetings/meetings', {
+      const response = await fetch('https://backend-learnbridge.onrender.com/api/meetings/meetings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

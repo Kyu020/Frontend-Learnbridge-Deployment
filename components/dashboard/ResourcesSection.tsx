@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { BookOpen, Clock, Users, Heart } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { Resource } from "@/interfaces/dashboard.interfaces"
+import { Resource } from "@/interfaces/resources.interfaces"
 
 interface ResourcesSectionProps {
     resources: Resource[];
@@ -72,11 +72,6 @@ export const ResourcesSection = ({ resources }: ResourcesSectionProps) => {
                         </span>
                       </div>
                     </div>
-                    {resource.difficulty && (
-                      <Badge variant="secondary" className="text-xs self-start hidden sm:flex">
-                        {resource.difficulty}
-                      </Badge>
-                    )}
                   </CardContent>
                 </Card>
               ))

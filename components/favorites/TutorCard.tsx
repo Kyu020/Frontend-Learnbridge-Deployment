@@ -7,7 +7,7 @@ import { useState } from "react";
 
 interface TutorCardProps {
   favorite: FavoriteItem;
-  onRemove: (id: string, tutorId?: string) => void;
+  onRemove: (id: string, tutorId?: string, resourceId?: string) => void;
   onViewProfile: (tutor: FavoriteTutor) => void;
   onBookNow: (tutor: FavoriteTutor) => void;
   isRemoving: boolean;

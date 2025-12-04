@@ -38,7 +38,7 @@ export const useMatchingTutors = (): UseMatchingTutorsReturn => {
       }
 
       const response = await fetch(
-        `http://localhost:5000/api/matching/match/${studentId}`,
+        `https://backend-learnbridge.onrender.com/api/matching/match/${studentId}`,
         {
           method: 'GET',
           headers: {

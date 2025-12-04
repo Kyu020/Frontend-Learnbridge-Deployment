@@ -55,7 +55,6 @@ export interface TutorFormData {
   bio: string;
   course: string;
   hourlyRate: string;
-  availability?: string; // Old format: comma-separated string (for UI form)
   availabilitySlots?: AvailabilitySlot[]; // New format: structured slots
   credentials: string;
   teachingLevel: "beginner" | "intermediate" | "advanced";

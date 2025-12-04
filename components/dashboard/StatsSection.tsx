@@ -1,6 +1,8 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { BookOpen, Users, TrendingUp } from "lucide-react";
-import { Resource, Tutor } from "@/interfaces/dashboard.interfaces";
+import { Resource } from "@/interfaces/resources.interfaces";
+import { Tutor } from "@/interfaces/tutors.interfaces"
+
 
 
 interface StatsSectionProps {

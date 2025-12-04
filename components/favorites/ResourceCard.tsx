@@ -7,7 +7,7 @@ import { FavoriteActions } from "./FavoriteActions";
 
 interface ResourceCardProps {
   favorite: FavoriteItem;
-  onRemove: (id: string, resourceId?: string) => void;
+  onRemove: (id: string, tutorId?: string, resourceId?: string) => void;
   onView: (resource: FavoriteResource) => void;
   isRemoving: boolean;
 }
