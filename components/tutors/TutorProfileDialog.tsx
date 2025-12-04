@@ -170,12 +170,12 @@ export const TutorProfileDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl w-[95vw] sm:w-full max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="flex flex-col max-w-4xl h-[90vh] max-h-[90vh] p-6 gap-4">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="text-lg sm:text-xl">{title}</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto flex-1">
           {/* Bio */}
           <div className="space-y-2">
             <Label className="text-sm sm:text-base">Bio *</Label>
@@ -291,7 +291,10 @@ export const TutorProfileDialog = ({
             <Label className="text-sm sm:text-base">Teaching Level *</Label>
             <select
               value={formData.teachingLevel}
-              onChange={(e) => onFormChange({ ...formData, teachingLevel: e.target.value })}
+              onChange={(e) => onFormChange({ 
+                ...formData, 
+                teachingLevel: e.target.value as 'beginner' | 'intermediate' | 'advanced' 
+              })}
               required
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
@@ -307,7 +310,10 @@ export const TutorProfileDialog = ({
             <Label className="text-sm sm:text-base">Teaching Style *</Label>
             <select
               value={formData.teachingStyle}
-              onChange={(e) => onFormChange({ ...formData, teachingStyle: e.target.value })}
+              onChange={(e) => onFormChange({ 
+                ...formData, 
+                teachingStyle: e.target.value as 'structured' | 'interactive' | 'conversational' | 'project-based' | 'problem-solving'
+              })}
               required
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
@@ -360,18 +366,148 @@ export const TutorProfileDialog = ({
             </div>
           </div>
 
-          {/* Availability */}
-          <div className="space-y-2">
-            <Label className="text-sm sm:text-base">Availability (comma separated)</Label>
-            <Input
-              value={formData.availability}
-              onChange={(e) => onFormChange({ ...formData, availability: e.target.value })}
-              placeholder="Monday 10AM-12PM, Wednesday 1PM-4PM, Friday 9AM-11AM"
-              className="text-sm sm:text-base"
-            />
-            <p className="text-xs text-muted-foreground">
-              Specify your available time slots separated by commas
-            </p>
+          {/* Availability Slots - New Structured Format */}
+          <div className="space-y-2 p-3 bg-slate-50 rounded-lg border border-slate-100">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex-1 min-w-0">
+                <Label className="text-sm sm:text-base font-semibold">Availability Schedule *</Label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Set your teaching hours for each day (students can only book within these times)
+                </p>
+              </div>
+              <div className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded flex-shrink-0">
+                {formData.availabilitySlots?.length || 0} slot{formData.availabilitySlots?.length !== 1 ? 's' : ''}
+              </div>
+            </div>
+
+            <div className="space-y-1 max-h-80 overflow-y-auto">
+              {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day) => {
+                const daySlots = (formData.availabilitySlots || []).filter(slot => slot.dayOfWeek === day);
+                const hasSlots = daySlots.length > 0;
+
+                return (
+                  <div key={day} className="p-3 bg-white rounded-lg border border-slate-200 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-sm capitalize text-slate-700 w-20">{day}</span>
+                      
+                      {daySlots.length === 0 ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const newSlot = {
+                              dayOfWeek: day as any,
+                              startTime: "09:00",
+                              endTime: "17:00",
+                              isActive: true
+                            };
+                            const updated = [...(formData.availabilitySlots || []), newSlot];
+                            onFormChange({ ...formData, availabilitySlots: updated });
+                          }}
+                          className="text-xs h-8"
+                        >
+                          + Add time
+                        </Button>
+                      ) : (
+                        <div className="text-xs text-green-600 font-medium">✓ Available</div>
+                      )}
+                    </div>
+
+                    {daySlots.map((slot, idx) => (
+                      <div key={idx} className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:ml-20 p-2 bg-slate-50 rounded overflow-x-hidden">
+                        <Input
+                          type="time"
+                          value={slot.startTime}
+                          onChange={(e) => {
+                            const updated = formData.availabilitySlots?.map(s =>
+                              s.dayOfWeek === day && s === slot
+                                ? { ...s, startTime: e.target.value }
+                                : s
+                            ) || [];
+                            onFormChange({ ...formData, availabilitySlots: updated });
+                          }}
+                          className="h-10 text-base font-semibold flex-1 min-w-0"
+                        />
+                        <span className="text-sm text-slate-500 hidden sm:inline">to</span>
+                        <Input
+                          type="time"
+                          value={slot.endTime}
+                          onChange={(e) => {
+                            const updated = formData.availabilitySlots?.map(s =>
+                              s.dayOfWeek === day && s === slot
+                                ? { ...s, endTime: e.target.value }
+                                : s
+                            ) || [];
+                            onFormChange({ ...formData, availabilitySlots: updated });
+                          }}
+                          className="h-10 text-base font-semibold flex-1 min-w-0"
+                        />
+                        <label className="flex items-center gap-1 text-sm cursor-pointer whitespace-nowrap">
+                          <input
+                            type="checkbox"
+                            checked={slot.isActive}
+                            onChange={(e) => {
+                              const updated = formData.availabilitySlots?.map(s =>
+                                s.dayOfWeek === day && s === slot
+                                  ? { ...s, isActive: e.target.checked }
+                                  : s
+                              ) || [];
+                              onFormChange({ ...formData, availabilitySlots: updated });
+                            }}
+                            className="h-2 w-2"
+                          />
+                          <span>Active</span>
+                        </label>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            const updated = formData.availabilitySlots?.filter(s => !(s.dayOfWeek === day && s === slot)) || [];
+                            onFormChange({ ...formData, availabilitySlots: updated });
+                          }}
+                          className="h-8 w-8 p-0 text-red-600 hover:bg-red-50 flex-shrink-0"
+                        >
+                          ✕
+                        </Button>
+                      </div>
+                    ))}
+
+                    {daySlots.length > 0 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          const newSlot = {
+                            dayOfWeek: day as any,
+                            startTime: "09:00",
+                            endTime: "17:00",
+                            isActive: true
+                          };
+                          const updated = [...(formData.availabilitySlots || []), newSlot];
+                          onFormChange({ ...formData, availabilitySlots: updated });
+                        }}
+                        className="text-xs h-7 ml-20 text-blue-600 hover:bg-blue-50"
+                      >
+                        + Add another time
+                      </Button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {!formData.availabilitySlots || formData.availabilitySlots.length === 0 ? (
+              <div className="p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700 font-medium">
+                ⚠️ You must add at least one available time slot
+              </div>
+            ) : (
+              <div className="p-2 bg-green-50 border border-green-200 rounded text-xs text-green-700">
+                ✓ Your availability is set. Students can only book during these times.
+              </div>
+            )}
           </div>
 
           {/* Credentials */}
@@ -388,12 +524,12 @@ export const TutorProfileDialog = ({
             </p>
           </div>
           
-          <DialogFooter className="pt-4">
+          <DialogFooter className="pt-3 border-t flex-shrink-0">
             <Button 
               type="button" 
               variant="outline" 
               onClick={() => onOpenChange(false)} 
-              className="text-sm sm:text-base"
+              className="text-sm"
               disabled={loading}
             >
               Cancel
@@ -401,7 +537,7 @@ export const TutorProfileDialog = ({
             <Button 
               type="submit" 
               disabled={loading} 
-              className="text-sm sm:text-base"
+              className="text-sm"
             >
               {loading ? (isEdit ? "Updating..." : "Creating...") : (isEdit ? "Update Profile" : "Create Profile")}
             </Button>

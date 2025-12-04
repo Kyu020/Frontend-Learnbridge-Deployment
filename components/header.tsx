@@ -78,9 +78,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
             <Button variant="ghost" size="icon" className="relative">
               <Bell className="h-5 w-5" />
               {unreadCount > 0 && (
-                <Badge variant="destructive" className="absolute -right-1 -top-1 h-5 w-5 rounded-full p-0 text-xs">
-                  {unreadCount}
-                </Badge>
+                <div className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-blue-500 border-2 border-background" />
               )}
             </Button>
           </DropdownMenuTrigger>
@@ -101,7 +99,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className="h-auto p-0 text-xs text-primary"
+                    className="h-auto p-0 text-xs text-blue-600 hover:text-blue-700"
                     onClick={markAllAsRead}
                   >
                     Mark all read
@@ -128,20 +126,20 @@ export function Header({ onMenuToggle }: HeaderProps) {
                 {notifications.slice(0, 4).map((notification) => (
                   <DropdownMenuItem 
                     key={notification.id} 
-                    className="flex flex-col items-start gap-1 p-3 cursor-pointer"
+                    className="flex flex-col items-start gap-1 p-3 cursor-pointer hover:bg-blue-50"
                     onClick={() => markAsRead(notification.id)}
                   >
                     <div className="flex w-full items-start justify-between">
-                      <p className="text-sm font-medium">{notification.title}</p>
+                      <p className="text-sm font-medium text-gray-900">{notification.title}</p>
                       {!notification.read && <div className="h-2 w-2 rounded-full bg-blue-600" />}
                     </div>
-                    <p className="text-xs text-muted-foreground">{notification.message}</p>
-                    <p className="text-xs text-muted-foreground">{notification.time}</p>
+                    <p className="text-xs text-gray-600">{notification.message}</p>
+                    <p className="text-xs text-gray-500">{notification.time}</p>
                   </DropdownMenuItem>
                 ))}
                 <DropdownMenuSeparator />
                 <Link href="/notifications">
-                  <DropdownMenuItem className="justify-center text-sm text-primary cursor-pointer">
+                  <DropdownMenuItem className="justify-center text-sm text-blue-600 hover:text-blue-700 cursor-pointer hover:bg-blue-50">
                     View all notifications ({notifications.length})
                   </DropdownMenuItem>
                 </Link>
@@ -176,13 +174,13 @@ export function Header({ onMenuToggle }: HeaderProps) {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <Link href="/profile">
-              <DropdownMenuItem className="cursor-pointer">
+              <DropdownMenuItem className="cursor-pointer hover:bg-blue-50">
                 <User className="mr-2 h-4 w-4" />
                 Profile
               </DropdownMenuItem>
             </Link>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600">
+            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600 hover:bg-red-50">
               <LogOut className="mr-2 h-4 w-4" />
               Logout
             </DropdownMenuItem>

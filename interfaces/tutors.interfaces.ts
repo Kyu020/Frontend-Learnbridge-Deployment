@@ -6,6 +6,14 @@ export interface ProfilePicture {
   bytes: number;
 }
 
+// Availability slot structure - matches backend
+export interface AvailabilitySlot {
+  dayOfWeek: "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday";
+  startTime: string; // HH:mm format (e.g., "09:00")
+  endTime: string;   // HH:mm format (e.g., "17:00")
+  isActive: boolean; // Allow tutors to temporarily disable slots
+}
+
 export interface Tutor {
   _id: string;
   studentId: string;
@@ -13,7 +21,7 @@ export interface Tutor {
   bio: string;
   course: string[];
   hourlyRate: number;
-  availability: string[];
+  availabilitySlots: AvailabilitySlot[]; // Structured availability instead of strings
   credentials?: string;
   favoriteCount: number;
   createdAt?: string;
@@ -31,7 +39,6 @@ export interface Tutor {
   profilePicture?: ProfilePicture;
   learningLevel?: "beginner" | "intermediate" | "advanced";
   preferredMode?: "online" | "in-person" | "either";
-  userAvailability?: string[];
   isTutor?: boolean;
 }
 
@@ -41,7 +48,6 @@ export interface CompleteTutorProfile extends Tutor {
   program: string;
   learningLevel: "beginner" | "intermediate" | "advanced";
   preferredMode: "online" | "in-person" | "either";
-  userAvailability: string[];
   isTutor: boolean;
 }
 
@@ -49,7 +55,8 @@ export interface TutorFormData {
   bio: string;
   course: string;
   hourlyRate: string;
-  availability: string;
+  availability?: string; // Old format: comma-separated string (for UI form)
+  availabilitySlots?: AvailabilitySlot[]; // New format: structured slots
   credentials: string;
   teachingLevel: "beginner" | "intermediate" | "advanced";
   teachingStyle: "structured" | "interactive" | "conversational" | "project-based" | "problem-solving";

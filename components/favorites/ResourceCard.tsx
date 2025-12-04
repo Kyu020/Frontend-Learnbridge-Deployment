@@ -14,8 +14,8 @@ interface ResourceCardProps {
 
 export const ResourceCard = ({ favorite, onRemove, onView, isRemoving }: ResourceCardProps) => (
   <Card className="group relative overflow-hidden transition-shadow hover:shadow-lg w-full">
-    <FavoriteActions 
-      onRemove={() => onRemove(favorite._id, undefined)}
+    <FavoriteActions
+      onRemove={() => onRemove(favorite._id, undefined, favorite.resourceId)}
       isRemoving={isRemoving}
     />
     

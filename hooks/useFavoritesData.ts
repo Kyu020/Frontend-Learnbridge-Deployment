@@ -30,13 +30,21 @@ export const useFavoritesData = (): UseFavoritesDataReturn => {
       const favoritesData = await favoritesService.getFavorites();
       setFavorites(favoritesData);
       
-      toast({
-        title: "Favorites loaded",
-        description: `Found ${favoritesData.length} saved item(s)`,
-      });
+      console.log('Favorites loaded:', favoritesData.length);
+      
+      // Only show toast if we have favorites
+      if (favoritesData.length > 0) {
+        toast({
+          title: "Favorites loaded",
+          description: `Found ${favoritesData.length} saved item(s)`,
+          duration: 3000,
+        });
+      }
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || "Failed to load favorites";
       setError(errorMessage);
+      console.error('Error loading favorites:', errorMessage);
+      
       toast({
         title: "Error",
         description: errorMessage,
@@ -51,14 +59,23 @@ export const useFavoritesData = (): UseFavoritesDataReturn => {
     try {
       const itemType = tutorId ? 'tutor' : 'resource';
       
+      console.log('Removing favorite:', { favoriteId, tutorId, resourceId, itemType });
+      
       toast({
         title: "Removing...",
         description: `Removing ${itemType} from favorites`,
       });
 
-      await favoritesService.removeFavorite({ tutorId, resourceId });
+      // Log what we're sending to the API
+      const requestBody = { 
+        tutorId: tutorId || undefined, 
+        resourceId: resourceId || undefined 
+      };
+      console.log('Sending to API:', requestBody);
       
-      // Remove from local state
+      await favoritesService.removeFavorite(requestBody);
+      
+      // Remove from local state using the favorite record ID
       setFavorites(prev => prev.filter(fav => fav._id !== favoriteId));
       
       toast({
@@ -67,6 +84,8 @@ export const useFavoritesData = (): UseFavoritesDataReturn => {
       });
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || "Failed to remove from favorites";
+      console.error('Error removing favorite:', { errorMessage, err });
+      
       toast({
         title: "Error",
         description: errorMessage,
@@ -76,9 +95,10 @@ export const useFavoritesData = (): UseFavoritesDataReturn => {
     }
   };
 
+  // CRITICAL: Add useEffect to fetch favorites on mount
   useEffect(() => {
     fetchFavorites();
-  }, []);
+  }, []); // Empty dependency array = run once on mount
 
   return {
     favorites,

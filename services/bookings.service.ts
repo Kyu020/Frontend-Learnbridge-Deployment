@@ -2,7 +2,7 @@
 import { Booking, BookingsData, StudentInfo, TutorInfo, ProfilePicture } from '@/interfaces/bookings.interfaces';
 
 class BookingsService {
-  private baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'; // Update this to your backend URL
+  private baseUrl = 'https://backend-learnbridge.onrender.com/api'; // Update this to your backend URL
 
   private getToken(): string {
     if (typeof window === 'undefined') {
@@ -86,30 +86,30 @@ class BookingsService {
       modality: item.modality,
       createdAt: item.createdAt,
       updatedAt: item.updatedAt,
-      // Meeting fields - will be populated when meetings are created
       meetingId: item.meetingId,
       roomId: item.roomId,
       meetingUrl: item.meetingUrl
     };
 
-    // Add user info based on booking type
+    // Add tutor info for sent bookings (student requesting a tutor)
     if (type === 'sent' && item.tutorInfo) {
       baseBooking.tutorInfo = {
-        _id: item.tutorInfo._id,
-        username: item.tutorInfo.username,
-        email: item.tutorInfo.email,
-        program: item.tutorInfo.program,
+        _id: item.tutorInfo._id || '',
+        username: item.tutorInfo.username || 'Unknown',
+        email: item.tutorInfo.email || '',
+        program: item.tutorInfo.program || '',
         specialization: item.tutorInfo.specialization || '',
         profilePicture: this.normalizeProfilePicture(item.tutorInfo.profilePicture)
       };
     }
 
+    // Add student info for received bookings (tutor receiving a request)
     if (type === 'received' && item.studentInfo) {
       baseBooking.studentInfo = {
-        _id: item.studentInfo._id,
-        username: item.studentInfo.username,
-        email: item.studentInfo.email,
-        program: item.studentInfo.program,
+        _id: item.studentInfo._id || '',
+        username: item.studentInfo.username || 'Unknown',
+        email: item.studentInfo.email || '',
+        program: item.studentInfo.program || '',
         specialization: item.studentInfo.specialization || '',
         profilePicture: this.normalizeProfilePicture(item.studentInfo.profilePicture)
       };
@@ -128,7 +128,7 @@ class BookingsService {
       const sentRes = await this.fetchWithAuth<{ 
         message: string; 
         body: any[] 
-      }>(`${this.baseUrl}/api/request/getstudentrequests`);
+      }>(`${this.baseUrl}/request/getstudentrequests`);
       
       sentBookings = (sentRes.body || []).map((item: any) => 
         this.transformBookingData(item, 'sent')
@@ -145,7 +145,7 @@ class BookingsService {
       const receivedRes = await this.fetchWithAuth<{ 
         message: string; 
         body: any[] 
-      }>(`${this.baseUrl}/api/request/getrequests`);
+      }>(`${this.baseUrl}/request/getrequests`);
       
       receivedBookings = (receivedRes.body || []).map((item: any) => 
         this.transformBookingData(item, 'received')
@@ -182,7 +182,7 @@ class BookingsService {
     if (tutorComment !== undefined) requestBody.tutorComment = tutorComment;
     if (comment !== undefined) requestBody.comment = comment;
     
-    const data = await this.fetchWithAuth<{ body: any }>(`${this.baseUrl}/api/request/updaterequeststatus/${id}`, {
+    const data = await this.fetchWithAuth<{ body: any }>(`${this.baseUrl}/request/updaterequeststatus/${id}`, {
       method: 'PUT',
       body: JSON.stringify(requestBody),
     });
@@ -194,7 +194,7 @@ class BookingsService {
 
   async createMeetingForBooking(bookingId: string): Promise<{ meeting: any; booking: Booking }> {
     const data = await this.fetchWithAuth<{ meeting: any; booking: any }>(
-      `${this.baseUrl}/api/meetings/meetings`,
+      `${this.baseUrl}/meetings/meetings`,
       {
         method: 'POST',
         body: JSON.stringify({}),

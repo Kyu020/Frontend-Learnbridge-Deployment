@@ -81,7 +81,7 @@ export const TutorSidebar = ({
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Availability</span>
-              <span className="font-semibold">{tutor.availability.length} slots</span>
+              <span className="font-semibold">{tutor.availabilitySlots?.length || 0} slots</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Rating</span>

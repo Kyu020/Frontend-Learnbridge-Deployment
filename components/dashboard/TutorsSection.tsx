@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, Star } from "lucide-react";
+import { Users, Star, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Tutor, ProfilePicture } from "@/interfaces/tutors.interfaces";
 import { useState } from "react";
+import { useMatchingTutors } from "@/hooks/useMatchingTutors";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface TutorSectionProps {
     tutors: Tutor[];   
@@ -13,8 +15,12 @@ interface TutorSectionProps {
 export const TutorsSection = ({ tutors }: TutorSectionProps) => {
     const { toast } = useToast();
     const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
+    const { matchedTutors, loading: matchLoading } = useMatchingTutors();
 
-    const recommendedTutors = tutors.slice(0, 3);
+    // Use matched tutors if available, otherwise fall back to first 3 tutors
+    const recommendedTutors = matchedTutors.length > 0 
+        ? matchedTutors.slice(0, 3).map(m => m.tutor)
+        : tutors.slice(0, 3);
     
     const handleViewAllClick = () => {
         toast({
@@ -55,7 +61,15 @@ export const TutorsSection = ({ tutors }: TutorSectionProps) => {
     return (
         <div className="space-y-4 sm:space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg sm:text-xl font-semibold text-foreground">Recommended Tutors</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg sm:text-xl font-semibold text-foreground">Recommended Tutors</h2>
+              {matchedTutors.length > 0 && (
+                <div className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
+                  <Zap className="h-3 w-3" />
+                  <span>Matched</span>
+                </div>
+              )}
+            </div>
             <Link href="/tutors">
               <Button 
                 variant="ghost" 
@@ -69,7 +83,23 @@ export const TutorsSection = ({ tutors }: TutorSectionProps) => {
           </div>
           
           <div className="space-y-3 sm:space-y-4">
-            {recommendedTutors.length === 0 ? (
+            {matchLoading ? (
+              // Loading skeletons
+              <>
+                {[1, 2, 3].map((i) => (
+                  <Card key={i}>
+                    <CardContent className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4">
+                      <Skeleton className="h-10 w-10 sm:h-12 sm:w-12 lg:h-14 lg:w-14 rounded-full" />
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-3 w-48" />
+                      </div>
+                      <Skeleton className="h-8 w-16" />
+                    </CardContent>
+                  </Card>
+                ))}
+              </>
+            ) : recommendedTutors.length === 0 ? (
               <Card>
                 <CardContent className="flex flex-col items-center justify-center py-8 text-center">
                   <Users className="h-12 w-12 text-muted-foreground mb-3" />

@@ -73,13 +73,26 @@ export const TutorInfoSection = ({ tutor }: TutorInfoSectionProps) => {
             Availability
           </h2>
           <div className="space-y-3">
-            {tutor.availability && tutor.availability.length > 0 ? (
-              tutor.availability.map((slot, index) => (
-                <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-foreground break-words">{slot}</span>
-                </div>
-              ))
+            {tutor.availabilitySlots && tutor.availabilitySlots.length > 0 ? (
+              <div className="space-y-3">
+                {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day) => {
+                  const daySlots = tutor.availabilitySlots.filter(slot => slot.dayOfWeek === day && slot.isActive);
+                  if (daySlots.length === 0) return null;
+                  return (
+                    <div key={day} className="p-3 bg-gray-50 rounded-lg">
+                      <p className="font-medium capitalize text-foreground mb-2">{day}</p>
+                      <div className="space-y-1">
+                        {daySlots.map((slot, idx) => (
+                          <div key={idx} className="flex items-center gap-2 text-sm text-foreground">
+                            <Clock className="h-3 w-3 text-muted-foreground" />
+                            {slot.startTime} - {slot.endTime}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             ) : (
               <p className="text-muted-foreground">No availability set</p>
             )}

@@ -1,6 +1,6 @@
 import { UserProfile } from '@/interfaces/profile.interfaces'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+const API_BASE_URL = 'https://backend-learnbridge.onrender.com/api'
 
 const getAuthToken = (): string | null => {
   if (typeof window !== 'undefined') {
@@ -16,7 +16,7 @@ const getAuthHeaders = () => ({
 
 export const ProfileService = {
   async getProfile(): Promise<UserProfile> {
-    const response = await fetch(`${API_BASE_URL}/api/profile/getprofile`, {
+    const response = await fetch(`${API_BASE_URL}/profile/getprofile`, {
       method: 'GET',
       headers: getAuthHeaders(),
       credentials: 'include'
@@ -34,7 +34,7 @@ export const ProfileService = {
   },
 
   async updateProfile(profileData: Partial<UserProfile>): Promise<UserProfile> {
-    const response = await fetch(`${API_BASE_URL}/api/profile/updateprofile`, {
+    const response = await fetch(`${API_BASE_URL}/profile/updateprofile`, {
       method: 'PUT',
       headers: getAuthHeaders(),
       credentials: 'include',

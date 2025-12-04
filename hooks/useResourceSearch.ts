@@ -20,7 +20,7 @@ export const useResourceSearch = (resources: Resource[]): UseResourceSearchRetur
     } else {
       const filtered = resources.filter(resource =>
         resource.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        resource.program.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        resource.course.toLowerCase().includes(searchQuery.toLowerCase()) ||
         resource.uploader?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         resource.uploaderName?.toLowerCase().includes(searchQuery.toLowerCase())
       );

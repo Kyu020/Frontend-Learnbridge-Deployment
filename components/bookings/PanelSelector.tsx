@@ -1,6 +1,5 @@
 // components/bookings/PanelSelector.tsx
-import { Badge } from "@/components/ui/badge";
-import { Send, User } from "lucide-react";
+import { Calendar } from "lucide-react";
 
 interface PanelSelectorProps {
   activePanel: "sent" | "received";
@@ -8,54 +7,64 @@ interface PanelSelectorProps {
   sentCount: number;
   receivedCount: number;
   isTutor: boolean;
+  upcomingCount?: number;
 }
 
-export const PanelSelector = ({
-  activePanel,
-  onPanelChange,
-  sentCount,
-  receivedCount,
-  isTutor
-}: PanelSelectorProps) => {
+export function PanelSelector({ 
+  activePanel, 
+  onPanelChange, 
+  sentCount, 
+  receivedCount, 
+  isTutor,
+  upcomingCount = 0 
+}: PanelSelectorProps) {
   return (
-    <div className="mb-6 bg-white rounded-lg border border-gray-200 mx-4 sm:mx-6">
-      <div className="flex gap-1 overflow-x-auto scrollbar-hide p-1">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div className="flex border-b border-gray-200">
         <button
           onClick={() => onPanelChange("sent")}
-          className={`px-3 sm:px-4 py-2 rounded-md transition-colors flex-shrink-0 text-sm sm:text-base min-w-max ${
+          className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
             activePanel === "sent"
-              ? "bg-green-500 text-white font-semibold shadow-sm"
-              : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+              ? "border-blue-600 text-blue-600"
+              : "border-transparent text-gray-500 hover:text-gray-700"
           }`}
         >
-          <div className="flex items-center gap-2">
-            <Send className="h-4 w-4" />
-            <span className="whitespace-nowrap">Sent</span>
-            <Badge variant="secondary" className="ml-1 text-xs bg-white/20 text-white">
+          Sent Requests
+          {sentCount > 0 && (
+            <span className="ml-2 px-2 py-1 text-xs bg-gray-100 rounded-full">
               {sentCount}
-            </Badge>
-          </div>
+            </span>
+          )}
         </button>
         
         {isTutor && (
           <button
             onClick={() => onPanelChange("received")}
-            className={`px-3 sm:px-4 py-2 rounded-md transition-colors flex-shrink-0 text-sm sm:text-base min-w-max ${
+            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
               activePanel === "received"
-                ? "bg-blue-500 text-white font-semibold shadow-sm"
-                : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                ? "border-blue-600 text-blue-600"
+                : "border-transparent text-gray-500 hover:text-gray-700"
             }`}
           >
-            <div className="flex items-center gap-2">
-              <User className="h-4 w-4" />
-              <span className="whitespace-nowrap">Received</span>
-              <Badge variant="secondary" className="ml-1 text-xs bg-white/20 text-white">
+            Received Requests
+            {receivedCount > 0 && (
+              <span className="ml-2 px-2 py-1 text-xs bg-gray-100 rounded-full">
                 {receivedCount}
-              </Badge>
-            </div>
+              </span>
+            )}
           </button>
         )}
       </div>
+      
+      {/* Session stats */}
+      {upcomingCount > 0 && (
+        <div className="flex items-center gap-2 text-sm">
+          <div className="flex items-center gap-1 px-3 py-1.5 bg-blue-100 text-blue-800 rounded-full">
+            <Calendar className="w-4 h-4" />
+            <span>{upcomingCount} upcoming sessions</span>
+          </div>
+        </div>
+      )}
     </div>
   );
-};
+}

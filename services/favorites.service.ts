@@ -2,7 +2,7 @@
 import { FavoriteItem, FavoritesResponse, RemoveFavoriteRequest, ProfilePicture } from '@/interfaces/favorites.interfaces';
 
 class FavoritesService {
-  private baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+  private baseUrl = 'https://backend-learnbridge.onrender.com/api';
 
   private getToken(): string {
     if (typeof window === 'undefined') {
@@ -71,7 +71,7 @@ class FavoritesService {
   }
 
   async getFavorites(): Promise<FavoriteItem[]> {
-    const data = await this.fetchWithAuth<FavoritesResponse>(`${this.baseUrl}/api/favorites/getfave`);
+    const data = await this.fetchWithAuth<FavoritesResponse>(`${this.baseUrl}/favorites/getfave`);
     
     // Normalize the favorites data to include profile pictures
     return (data.favorites || []).map(favorite => ({
@@ -84,7 +84,7 @@ class FavoritesService {
   }
 
   async removeFavorite(request: RemoveFavoriteRequest): Promise<void> {
-    await this.fetchWithAuth(`${this.baseUrl}/api/favorites/removefave`, {
+    await this.fetchWithAuth(`${this.baseUrl}/favorites/removefave`, {
       method: 'POST',
       body: JSON.stringify(request),
     });

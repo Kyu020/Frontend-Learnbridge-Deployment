@@ -1,17 +1,19 @@
 "use client"
 
-import { useState } from "react"
+import React, { useState } from "react"
 import { useRouter } from "next/navigation"
 import { LayoutWrapper } from "@/components/layout-wrapper"
 import { PageLoader } from "@/components/ui/loading-spinner"
 import { TutorHeader } from "@/components/tutors/TutorHeader"
 import { Filters } from "@/components/tutors/Filters"
-import { TutorCard } from "@/components/tutors/TutorCard"
+import { TutorTable } from "@/components/tutors/TutorTable"
 import { TutorProfileDialog } from "@/components/tutors/TutorProfileDialog"
 import { ScheduleDialog } from "@/components/tutors/ScheduleDialog"
 import { EmptyState } from "@/components/tutors/EmptyState"
 import { useTutorsData } from "@/hooks/useTutorsData"
 import { useTutorSearch } from "@/hooks/useTutorSearch"
+import { useMatchingTutors } from "@/hooks/useMatchingTutors"
+import { useTutorCredibility } from "@/hooks/useTutorCredibility"
 import { TutorFormData, ScheduleFormData } from "@/interfaces/tutors.interfaces"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/contexts/authContext" // Import the hook
@@ -27,6 +29,7 @@ export default function TutorsPage() {
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [updatingFavorite, setUpdatingFavorite] = useState<string | null>(null)
   const [selectedTutor, setSelectedTutor] = useState<any>(null)
+  const [credibilityScores, setCredibilityScores] = useState<Map<string, number>>(new Map())
   
   // FIXED: Use proper default values that match the interface
   const [createForm, setCreateForm] = useState<TutorFormData>({
@@ -34,9 +37,10 @@ export default function TutorsPage() {
     course: "",
     hourlyRate: "",
     availability: "",
+    availabilitySlots: [],
     credentials: "",
-    teachingLevel: "beginner", // Changed from "" to "beginner"
-    teachingStyle: "interactive", // Changed from "" to "interactive"
+    teachingLevel: "beginner",
+    teachingStyle: "interactive",
     modeOfTeaching: "online"
   })
 
@@ -46,6 +50,7 @@ export default function TutorsPage() {
     course: "",
     hourlyRate: "",
     availability: "",
+    availabilitySlots: [],
     credentials: "",
     teachingLevel: "beginner", // Changed from "" to "beginner"
     teachingStyle: "interactive", // Changed from "" to "interactive"
@@ -83,6 +88,82 @@ export default function TutorsPage() {
     clearFilters,
   } = useTutorSearch(tutors)
 
+  const { matchedTutors } = useMatchingTutors()
+
+  // Create score map from matched tutors
+  const matchScores = new Map(
+    matchedTutors.map(m => [m.tutor.studentId, Math.round((m.score / 100) * 100)])
+  )
+
+  // Fetch credibility scores for all tutors
+  const fetchCredibilityScores = async () => {
+    if (tutors.length === 0) {
+      console.log('No tutors to fetch credibility for')
+      return
+    }
+    
+    console.log(`Fetching credibility for ${tutors.length} tutors`)
+    const scores = new Map<string, number>()
+    const token = localStorage.getItem('token')
+    
+    if (!token) {
+      console.warn('No token found in localStorage')
+      return
+    }
+    
+    try {
+      for (const tutor of tutors) {
+        try {
+          const url = `http://localhost:5000/api/credibility/tutor/${tutor.studentId}`
+          console.log(`Fetching credibility from: ${url}`)
+          
+          const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+          })
+          
+          console.log(`Response status for ${tutor.studentId}: ${response.status}`)
+          
+          if (response.ok) {
+            const data = await response.json()
+            console.log(`Credibility data for ${tutor.studentId}:`, data)
+            
+            if (data.success && data.credibility) {
+              scores.set(tutor.studentId, data.credibility.score)
+              console.log(`Set credibility score ${data.credibility.score} for ${tutor.studentId}`)
+            }
+          } else {
+            console.error(`Failed to fetch credibility for ${tutor.studentId}: ${response.statusText}`)
+          }
+        } catch (err) {
+          console.error(`Error fetching credibility for tutor ${tutor.studentId}:`, err)
+        }
+      }
+      
+      console.log(`Total credibility scores fetched: ${scores.size}`)
+      setCredibilityScores(scores)
+    } catch (err) {
+      console.error('Error fetching credibility scores:', err)
+    }
+  }
+
+  // Call fetchCredibilityScores when tutors load
+  React.useEffect(() => {
+    if (tutors.length > 0) {
+      fetchCredibilityScores()
+    }
+  }, [tutors])
+
+  // Sort filtered tutors by match score if available
+  const sortedTutors = [...filteredTutors].sort((a, b) => {
+    const scoreA = matchScores.get(a.studentId) ?? 0
+    const scoreB = matchScores.get(b.studentId) ?? 0
+    return scoreB - scoreA
+  })
+
   // Handler functions
   const handleCreateTutor = async () => {
     try {
@@ -93,6 +174,7 @@ export default function TutorsPage() {
         course: "",
         hourlyRate: "",
         availability: "",
+        availabilitySlots: [],
         credentials: "",
         teachingLevel: "beginner",
         teachingStyle: "interactive",
@@ -122,9 +204,10 @@ export default function TutorsPage() {
           ? profile.course.join(", ") 
           : profile.course || "",
         hourlyRate: profile.hourlyRate?.toString() || "",
-        availability: Array.isArray(profile.availability) 
-          ? profile.availability.join(", ") 
-          : profile.availability || "",
+        availability: "",
+        availabilitySlots: Array.isArray(profile.availabilitySlots) 
+          ? profile.availabilitySlots 
+          : [],
         credentials: profile.credentials || "",
         teachingLevel: profile.teachingLevel || "",
         teachingStyle: profile.teachingStyle || "",
@@ -252,66 +335,54 @@ export default function TutorsPage() {
         />
       </div>
 
-      {/* Main Content Grid */}
-      <div className="flex flex-col lg:flex-row gap-8">
-        {/* Filters Sidebar */}
-        <div className="lg:w-80 flex-shrink-0">
-          <div className="sticky top-6">
-            <div className={`
-              ${showMobileFilters ? 'block' : 'hidden'} 
-              lg:block
-            `}>
-              <Filters
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                priceRange={priceRange}
-                onPriceRangeChange={setPriceRange}
-                onClearFilters={clearFilters}
-                resultCount={filteredTutors.length}
-                totalCount={tutors.length}
-                showMobileFilters={showMobileFilters}
-                onMobileFiltersToggle={() => setShowMobileFilters(!showMobileFilters)}
-              />
-            </div>
-          </div>
-        </div>
+      {/* Filters at Top */}
+      <div className="mb-6">
+        <Filters
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          priceRange={priceRange}
+          onPriceRangeChange={setPriceRange}
+          onClearFilters={clearFilters}
+          resultCount={filteredTutors.length}
+          totalCount={tutors.length}
+          showMobileFilters={showMobileFilters}
+          onMobileFiltersToggle={() => setShowMobileFilters(!showMobileFilters)}
+        />
+      </div>
 
-        {/* Tutors List */}
-        <div className="flex-1 min-w-0">
-          {/* Results Header */}
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold text-foreground">
-              {filteredTutors.length} {filteredTutors.length === 1 ? 'tutor' : 'tutors'} found
-            </h2>
-            {searchQuery && (
-              <p className="text-sm text-muted-foreground mt-1">
-                Search results for "{searchQuery}"
-              </p>
-            )}
-          </div>
+      {/* Results Header */}
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold text-foreground">
+          {filteredTutors.length} {filteredTutors.length === 1 ? 'tutor' : 'tutors'} found
+        </h2>
+        {searchQuery && (
+          <p className="text-sm text-muted-foreground mt-1">
+            Search results for "{searchQuery}"
+          </p>
+        )}
+      </div>
 
-          {/* Tutors List */}
-          <div className="space-y-6">
-            {filteredTutors.length > 0 ? (
-              filteredTutors.map((tutor) => (
-                <TutorCard
-                  key={tutor.studentId}
-                  tutor={tutor}
-                  isFavorite={favorites.has(tutor.studentId)}
-                  onToggleFavorite={handleToggleFavorite}
-                  onScheduleSession={handleOpenScheduleDialog}
-                  onViewProfile={handleViewProfile}
-                  isUpdatingFavorite={updatingFavorite === tutor.studentId}
-                />
-              ))
-            ) : (
-              <EmptyState 
-                searchQuery={searchQuery}
-                onClearFilters={clearFilters}
-              />
-            )}
-          </div>
-        </div>
+      {/* Tutors List */}
+      <div>
+        {sortedTutors.length > 0 ? (
+          <TutorTable
+            tutors={sortedTutors}
+            favorites={favorites}
+            onToggleFavorite={handleToggleFavorite}
+            onScheduleSession={handleOpenScheduleDialog}
+            onViewProfile={handleViewProfile}
+            isUpdatingFavorite={updatingFavorite}
+            matchScores={matchScores}
+            showMatchScore={matchedTutors.length > 0}
+            credibilityScores={credibilityScores}
+            showCredibility={credibilityScores.size > 0}
+          />
+        ) : (
+          <EmptyState 
+            searchQuery={searchQuery}
+            onClearFilters={clearFilters}
+          />
+        )}
       </div>
 
       {/* Create Tutor Dialog */}

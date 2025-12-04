@@ -30,25 +30,11 @@ export const Filters = ({
   onMobileFiltersToggle
 }: FiltersProps) => {
   return (
-    <>
-      {/* Mobile Filters Toggle */}
-      {onMobileFiltersToggle && (
-        <div className="lg:hidden mb-4">
-          <Button
-            variant="outline"
-            className="w-full justify-center"
-            onClick={onMobileFiltersToggle}
-          >
-            <Filter className="h-4 w-4 mr-2" />
-            {showMobileFilters ? "Hide Filters" : "Show Filters"}
-          </Button>
-        </div>
-      )}
-
-      {/* Filters Sidebar - SIMPLIFIED: Remove all conditional display logic */}
-      <Card className="sticky top-6">
-        <CardContent className="p-4 sm:p-6">
-          <div className="flex items-center justify-between mb-4">
+    <Card>
+      <CardContent className="p-4">
+        <div className="flex flex-col gap-4">
+          {/* Top Row - Search and Filter Label */}
+          <div className="flex items-center justify-between">
             <h3 className="font-semibold text-lg">Search & Filters</h3>
             <Button
               variant="ghost"
@@ -60,8 +46,10 @@ export const Filters = ({
             </Button>
           </div>
 
-          <div className="space-y-4">
-            <div>
+          {/* Filter Controls - Horizontal Layout */}
+          <div className="flex flex-col sm:flex-row gap-4 items-end">
+            {/* Search Input */}
+            <div className="flex-1 min-w-0">
               <Label htmlFor="search" className="text-sm">Search Tutors</Label>
               <div className="relative mt-1">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -75,30 +63,29 @@ export const Filters = ({
               </div>
             </div>
 
-            <div>
-              <Label className="mb-2 block text-sm">Price Range</Label>
+            {/* Price Range Select */}
+            <div className="w-full sm:w-48">
+              <Label className="text-sm block">Price Range</Label>
               <Select value={priceRange} onValueChange={onPriceRangeChange}>
-                <SelectTrigger className="text-sm">
+                <SelectTrigger className="text-sm mt-1">
                   <SelectValue placeholder="All Prices" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Prices</SelectItem>
-                  <SelectItem value="low">Under ₱50/hr</SelectItem>
-                  <SelectItem value="medium">₱50-₱100/hr</SelectItem>
-                  <SelectItem value="high">₱100+/hr</SelectItem>
+                  <SelectItem value="low">₱200-₱400/hr</SelectItem>
+                  <SelectItem value="medium">₱400-₱750/hr</SelectItem>
+                  <SelectItem value="high">₱750+/hr</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {/* Results Count */}
-            <div className="pt-4 border-t">
-              <p className="text-sm text-muted-foreground">
-                Showing {resultCount} of {totalCount} tutors
-              </p>
+            <div className="text-sm text-muted-foreground whitespace-nowrap">
+              {resultCount} of {totalCount}
             </div>
           </div>
-        </CardContent>
-      </Card>
-    </>
+        </div>
+      </CardContent>
+    </Card>
   );
 };

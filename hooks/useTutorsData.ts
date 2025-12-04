@@ -70,9 +70,15 @@ export const useTutorsData = (): UseTutorsDataReturn => {
   const fetchUserTutorStatus = async (): Promise<void> => {
     try {
       const { tutorProfile } = await tutorsService.verifyTutorProfile();
+      
+      // Determine isTutor from the tutorProfile.isTutor field (from backend User model)
+      // and hasTutorProfile from whether tutorProfile exists
+      const isTutorStatus = tutorProfile?.isTutor ?? false;
+      const hasTutorProfile = !!tutorProfile;
+      
       setUserTutorStatus({
-        isTutor: !!tutorProfile,
-        hasTutorProfile: !!tutorProfile,
+        isTutor: isTutorStatus,
+        hasTutorProfile: hasTutorProfile,
         userTutorProfile: tutorProfile,
       });
     } catch (err: any) {
@@ -130,6 +136,10 @@ export const useTutorsData = (): UseTutorsDataReturn => {
       if (!formData.bio || !formData.course || !formData.hourlyRate) {
         throw new Error("Please fill in all required fields.");
       }
+      
+      if (!formData.availabilitySlots || formData.availabilitySlots.length === 0) {
+        throw new Error("Please add at least one availability time slot.");
+      }
 
       const { tutor } = await tutorsService.createTutorProfile(formData);
       setUserTutorStatus({
@@ -159,6 +169,10 @@ export const useTutorsData = (): UseTutorsDataReturn => {
     try {
       if (!formData.bio || !formData.course || !formData.hourlyRate) {
         throw new Error("Please fill in all required fields.");
+      }
+      
+      if (!formData.availabilitySlots || formData.availabilitySlots.length === 0) {
+        throw new Error("Please add at least one availability time slot.");
       }
 
       const { updatedProfile } = await tutorsService.updateTutorProfile(formData);

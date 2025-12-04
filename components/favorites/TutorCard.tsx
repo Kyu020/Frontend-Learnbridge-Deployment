@@ -40,7 +40,7 @@ export const TutorCard = ({ favorite, onRemove, onViewProfile, onBookNow, isRemo
   return (
     <Card className="group relative transition-shadow hover:shadow-lg flex flex-col w-full">
       <FavoriteActions 
-        onRemove={() => onRemove(favorite._id, favorite.tutorId)}
+        onRemove={() => onRemove(favorite._id, favorite.tutorId, undefined)}
         isRemoving={isRemoving}
       />
       

@@ -90,7 +90,7 @@ export default function Home() {
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-3">
               <Image 
-                src="/gordon-logo.png"
+                src="/logo.jpg"
                 alt="Gordon College CCS"
                 width={40}
                 height={40}
@@ -403,7 +403,7 @@ export default function Home() {
             <div>
               <div className="flex items-center space-x-3 mb-4">
                 <Image 
-                  src="/gordon-logo.png"
+                  src="/logo.jpg"
                   alt="Gordon College"
                   width={40}
                   height={40}

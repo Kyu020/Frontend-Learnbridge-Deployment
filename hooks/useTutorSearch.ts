@@ -26,9 +26,9 @@ export const useTutorSearch = (tutors: Tutor[]) => {
       
       const matchesPrice =
         priceRange === 'all' ||
-        (priceRange === 'low' && tutor.hourlyRate < 50) ||
-        (priceRange === 'medium' && tutor.hourlyRate >= 50 && tutor.hourlyRate < 100) ||
-        (priceRange === 'high' && tutor.hourlyRate >= 100);
+        (priceRange === 'low' && tutor.hourlyRate >= 200 && tutor.hourlyRate < 400) ||
+        (priceRange === 'medium' && tutor.hourlyRate >= 400 && tutor.hourlyRate < 750) ||
+        (priceRange === 'high' && tutor.hourlyRate >= 750);
       
       return matchesSearch && matchesPrice;
     });

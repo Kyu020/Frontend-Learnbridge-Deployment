@@ -1,7 +1,7 @@
 import { Tutor, Review, ScheduleFormData, ReviewFormData, CompleteTutorProfile } from '@/interfaces/tutors.interfaces';
 
 class TutorProfileService {
-  private baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+  private baseUrl = 'https://backend-learnbridge.onrender.com/api';
 
   private getToken(): string {
     if (typeof window === 'undefined') {
@@ -36,12 +36,12 @@ class TutorProfileService {
   }
 
   async fetchTutorProfile(studentId: string): Promise<{ data: CompleteTutorProfile }> {
-    return this.fetchWithAuth<{ data: CompleteTutorProfile }>(`${this.baseUrl}/api/tutor/gettutor/${studentId}`);
+    return this.fetchWithAuth<{ data: CompleteTutorProfile }>(`${this.baseUrl}/tutor/gettutor/${studentId}`);
   }
 
   async fetchTutorReviews(tutorId: string): Promise<Review[]> {
     try {
-      const data = await this.fetchWithAuth<any>(`${this.baseUrl}/api/reviews/getreviews/${tutorId}`);
+      const data = await this.fetchWithAuth<any>(`${this.baseUrl}/reviews/getreviews/${tutorId}`);
       
       let reviewsData = data;
       if (reviewsData && typeof reviewsData === 'object' && !Array.isArray(reviewsData)) {
@@ -69,7 +69,7 @@ class TutorProfileService {
   }
 
   async fetchFavorites(): Promise<string[]> {
-    const data = await this.fetchWithAuth<{ favorites: any[] }>(`${this.baseUrl}/api/favorites/getfave`);
+    const data = await this.fetchWithAuth<{ favorites: any[] }>(`${this.baseUrl}/favorites/getfave`);
     return data.favorites
       ?.filter((fav: any) => fav.tutorId)
       .map((fav: any) => fav.tutorId) || [];
@@ -86,34 +86,34 @@ class TutorProfileService {
       modality: scheduleData.modality 
     };
 
-    await this.fetchWithAuth(`${this.baseUrl}/api/request/sendrequest`, {
+    await this.fetchWithAuth(`${this.baseUrl}/request/sendrequest`, {
       method: 'POST',
       body: JSON.stringify(formattedData),
     });
   }
 
   async submitReview(reviewData: ReviewFormData & { tutorId: string }): Promise<void> {
-    await this.fetchWithAuth(`${this.baseUrl}/api/reviews/review`, {
+    await this.fetchWithAuth(`${this.baseUrl}/reviews/review`, {
       method: 'POST',
       body: JSON.stringify(reviewData),
     });
   }
 
   async deleteReview(tutorId: string): Promise<void> {
-    await this.fetchWithAuth(`${this.baseUrl}/api/reviews/deletereview/${tutorId}`, {
+    await this.fetchWithAuth(`${this.baseUrl}/reviews/deletereview/${tutorId}`, {
       method: 'DELETE',
     });
   }
 
   async addFavorite(tutorId: string): Promise<void> {
-    await this.fetchWithAuth(`${this.baseUrl}/api/favorites/addfave`, {
+    await this.fetchWithAuth(`${this.baseUrl}/favorites/addfave`, {
       method: 'POST',
       body: JSON.stringify({ tutorId }),
     });
   }
 
   async removeFavorite(tutorId: string): Promise<void> {
-    await this.fetchWithAuth(`${this.baseUrl}/api/favorites/removefave`, {
+    await this.fetchWithAuth(`${this.baseUrl}/favorites/removefave`, {
       method: 'POST',
       body: JSON.stringify({ tutorId }),
     });

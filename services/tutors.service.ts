@@ -2,7 +2,7 @@
 import { Tutor, TutorFormData, ScheduleFormData, ProfilePicture } from '@/interfaces/tutors.interfaces';
 
 class TutorsService {
-  private baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+  private baseUrl = 'https://backend-learnbridge.onrender.com/api';
 
   private getToken(): string {
     if (typeof window === 'undefined') {
@@ -72,7 +72,7 @@ class TutorsService {
 
   async fetchTutors(): Promise<Tutor[]> {
     try {
-      const data = await this.fetchWithAuth<{ tutors: any[] }>(`${this.baseUrl}/api/tutor/getalltutor`);
+      const data = await this.fetchWithAuth<{ tutors: any[] }>(`${this.baseUrl}/tutor/getalltutor`);
       
       if (!data.tutors || !Array.isArray(data.tutors)) {
         console.warn('No tutors array in response');
@@ -89,7 +89,7 @@ class TutorsService {
           bio: tutor.bio || "No bio available",
           course: Array.isArray(tutor.course) ? tutor.course : [],
           hourlyRate: tutor.hourlyRate || 0,
-          availability: Array.isArray(tutor.availability) ? tutor.availability : [],
+          availabilitySlots: Array.isArray(tutor.availabilitySlots) ? tutor.availabilitySlots : [],
           credentials: tutor.credentials || "",
           favoriteCount: tutor.favoriteCount || 0,
           ratingAverage: tutor.ratingAverage || 0,
@@ -116,14 +116,14 @@ class TutorsService {
   }
 
   async fetchFavorites(): Promise<string[]> {
-    const data = await this.fetchWithAuth<{ favorites: any[] }>(`${this.baseUrl}/api/favorites/getfave`);
+    const data = await this.fetchWithAuth<{ favorites: any[] }>(`${this.baseUrl}/favorites/getfave`);
     return data.favorites
       ?.filter((fav: any) => fav.tutorId)
       .map((fav: any) => fav.tutorId) || [];
   }
 
   async verifyTutorProfile(): Promise<{ tutorProfile: Tutor | null }> {
-    const data = await this.fetchWithAuth<{ tutorProfile: any }>(`${this.baseUrl}/api/tutor/verifytutorprofile`);
+    const data = await this.fetchWithAuth<{ tutorProfile: any }>(`${this.baseUrl}/tutor/verifytutorprofile`);
     
     if (!data.tutorProfile) {
       return { tutorProfile: null };
@@ -138,7 +138,7 @@ class TutorsService {
       bio: data.tutorProfile.bio || "No bio available",
       course: Array.isArray(data.tutorProfile.course) ? data.tutorProfile.course : [],
       hourlyRate: data.tutorProfile.hourlyRate || 0,
-      availability: Array.isArray(data.tutorProfile.availability) ? data.tutorProfile.availability : [],
+      availabilitySlots: Array.isArray(data.tutorProfile.availabilitySlots) ? data.tutorProfile.availabilitySlots : [],
       credentials: data.tutorProfile.credentials || "",
       favoriteCount: data.tutorProfile.favoriteCount || 0,
       ratingAverage: data.tutorProfile.ratingAverage || 0,
@@ -150,25 +150,26 @@ class TutorsService {
       teachingStyle: data.tutorProfile.teachingStyle || "interactive",
       modeOfTeaching: data.tutorProfile.modeOfTeaching || "online",
       program: data.tutorProfile.program,
-      email: data.tutorProfile.email
+      email: data.tutorProfile.email,
+      isTutor: data.tutorProfile.isTutor ?? false
     };
 
     return { tutorProfile: normalizedTutor };
   }
 
   async toggleTutorMode(studentId: string, isTutor: boolean): Promise<void> {
-    await this.fetchWithAuth(`${this.baseUrl}/api/tutor/toggletutormode/${studentId}`, {
+    await this.fetchWithAuth(`${this.baseUrl}/tutor/toggletutormode`, {
       method: 'PUT',
       body: JSON.stringify({ isTutor }),
     });
   }
 
   async createTutorProfile(formData: TutorFormData): Promise<{ tutor: Tutor }> {
-    // Include all the new fields in the formatted data
+    // Send availabilitySlots if they exist, otherwise send empty array
     const formattedData = {
       bio: formData.bio,
       course: formData.course.split(",").map((s: string) => s.trim()).filter((s: string) => s),
-      availability: formData.availability.split(",").map((a: string) => a.trim()).filter((a: string) => a),
+      availabilitySlots: Array.isArray(formData.availabilitySlots) ? formData.availabilitySlots : [],
       hourlyRate: parseInt(formData.hourlyRate) || 0,
       credentials: formData.credentials,
       teachingLevel: formData.teachingLevel,
@@ -176,7 +177,7 @@ class TutorsService {
       modeOfTeaching: formData.modeOfTeaching
     };
 
-    const response = await this.fetchWithAuth<{ tutor: any }>(`${this.baseUrl}/api/tutor/createtutor`, {
+    const response = await this.fetchWithAuth<{ tutor: any }>(`${this.baseUrl}/tutor/createtutor`, {
       method: 'POST',
       body: JSON.stringify(formattedData),
     });
@@ -190,7 +191,7 @@ class TutorsService {
       bio: response.tutor.bio || "No bio available",
       course: Array.isArray(response.tutor.course) ? response.tutor.course : [],
       hourlyRate: response.tutor.hourlyRate || 0,
-      availability: Array.isArray(response.tutor.availability) ? response.tutor.availability : [],
+      availabilitySlots: Array.isArray(response.tutor.availabilitySlots) ? response.tutor.availabilitySlots : [],
       credentials: response.tutor.credentials || "",
       favoriteCount: response.tutor.favoriteCount || 0,
       ratingAverage: response.tutor.ratingAverage || 0,
@@ -209,11 +210,11 @@ class TutorsService {
   }
 
   async updateTutorProfile(formData: TutorFormData): Promise<{ updatedProfile: Tutor }> {
-    // Include all the new fields in the formatted data
+    // Send availabilitySlots if they exist, otherwise send empty array
     const formattedData = {
       bio: formData.bio,
       course: formData.course.split(",").map((s: string) => s.trim()).filter((s: string) => s),
-      availability: formData.availability.split(",").map((a: string) => a.trim()).filter((a: string) => a),
+      availabilitySlots: Array.isArray(formData.availabilitySlots) ? formData.availabilitySlots : [],
       hourlyRate: parseInt(formData.hourlyRate) || 0,
       credentials: formData.credentials,
       teachingLevel: formData.teachingLevel,
@@ -221,7 +222,7 @@ class TutorsService {
       modeOfTeaching: formData.modeOfTeaching
     };
 
-    const response = await this.fetchWithAuth<{ updatedProfile: any }>(`${this.baseUrl}/api/tutor/updatetutor`, {
+    const response = await this.fetchWithAuth<{ updatedProfile: any }>(`${this.baseUrl}/tutor/updatetutor`, {
       method: 'PUT',
       body: JSON.stringify(formattedData),
     });
@@ -235,7 +236,7 @@ class TutorsService {
       bio: response.updatedProfile.bio || "No bio available",
       course: Array.isArray(response.updatedProfile.course) ? response.updatedProfile.course : [],
       hourlyRate: response.updatedProfile.hourlyRate || 0,
-      availability: Array.isArray(response.updatedProfile.availability) ? response.updatedProfile.availability : [],
+      availabilitySlots: Array.isArray(response.updatedProfile.availabilitySlots) ? response.updatedProfile.availabilitySlots : [],
       credentials: response.updatedProfile.credentials || "",
       favoriteCount: response.updatedProfile.favoriteCount || 0,
       ratingAverage: response.updatedProfile.ratingAverage || 0,
@@ -265,21 +266,21 @@ class TutorsService {
       modality: scheduleData.modality
     };
 
-    await this.fetchWithAuth(`${this.baseUrl}/api/request/sendrequest`, {
+    await this.fetchWithAuth(`${this.baseUrl}/request/sendrequest`, {
       method: 'POST',
       body: JSON.stringify(formattedData),
     });
   }
 
   async addFavorite(tutorId: string): Promise<void> {
-    await this.fetchWithAuth(`${this.baseUrl}/api/favorites/addfave`, {
+    await this.fetchWithAuth(`${this.baseUrl}/favorites/addfave`, {
       method: 'POST',
       body: JSON.stringify({ tutorId }),
     });
   }
 
   async removeFavorite(tutorId: string): Promise<void> {
-    await this.fetchWithAuth(`${this.baseUrl}/api/favorites/removefave`, {
+    await this.fetchWithAuth(`${this.baseUrl}/favorites/removefave`, {
       method: 'POST',
       body: JSON.stringify({ tutorId }),
     });

@@ -85,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return null
       }
 
-      const response = await fetch("https://backend-learnbridge.onrender.com/api/profile/getprofile", {
+      const response = await fetch("http://localhost:5000/api/profile/getprofile", {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',

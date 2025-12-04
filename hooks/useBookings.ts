@@ -1,179 +1,296 @@
-// hooks/useBookings.ts
-import { useState, useEffect } from 'react';
-import { bookingsService } from '@/services/bookings.service';
-import { Booking, BookingsData } from '@/interfaces/bookings.interfaces';
+import { useState, useEffect, useCallback } from 'react';
+import { Booking, BookingWithSession, Session } from '@/interfaces/bookings.interfaces';
+import api from '@/lib/axios';
 import { useToast } from '@/hooks/use-toast';
 
-interface UseBookingsReturn extends BookingsData {
-  loading: boolean;
-  sentError: string | null;
-  receivedError: string | null;
-  updatingStatus: boolean;
-  refetchBookings: () => Promise<void>;
-  updateBookingStatus: (id: string, status?: Booking["status"], tutorComment?: string, comment?: string) => Promise<void>;
-  joinMeeting: (roomId: string) => void;
-}
-
-export const useBookings = (): UseBookingsReturn => {
-  const [bookingsData, setBookingsData] = useState<BookingsData>({
-    sentBookings: [],
-    receivedBookings: [],
-    isTutor: false,
-  });
-  const [loading, setLoading] = useState(true);
+export const useBookings = () => {
+  const [sentBookings, setSentBookings] = useState<BookingWithSession[]>([]);
+  const [receivedBookings, setReceivedBookings] = useState<BookingWithSession[]>([]);
+  const [upcomingSessions, setUpcomingSessions] = useState<Session[]>([]);
+  const [isTutor, setIsTutor] = useState<boolean | null>(null); // null means not loaded yet
+  const [loading, setLoading] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
   const [sentError, setSentError] = useState<string | null>(null);
   const [receivedError, setReceivedError] = useState<string | null>(null);
-  const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [tutorStatusLoading, setTutorStatusLoading] = useState(true); // Separate loading for tutor status
   const { toast } = useToast();
 
-  const fetchBookings = async (): Promise<void> => {
+  // Check if user is tutor on initial load
+  useEffect(() => {
+    const checkTutorStatus = async () => {
+      setTutorStatusLoading(true);
+      try {
+        const response = await api.get('/profile/getprofile');
+        console.log('Profile response:', response.data);
+        // The response structure is { user: { isTutor, ... } }
+        const userIsTutor = response.data?.user?.isTutor || false;
+        setIsTutor(userIsTutor);
+        console.log('Tutor status loaded:', userIsTutor);
+      } catch (err) {
+        console.error('Error checking tutor status:', err);
+        setIsTutor(false); // Default to false on error
+      } finally {
+        setTutorStatusLoading(false);
+      }
+    };
+    
+    checkTutorStatus();
+  }, []);
+
+  // Fetch all booking data
+  const fetchBookings = useCallback(async (shouldFetchReceived: boolean) => {
+    setLoading(true);
+    setSentError(null);
+    setReceivedError(null);
+
     try {
-      setLoading(true);
-      setSentError(null);
-      setReceivedError(null);
-
-      console.log("🔄 Fetching bookings...");
-      const data = await bookingsService.fetchBookings();
-      console.log("📦 Bookings data received:", data);
+      // Fetch sent bookings (for both students and tutors)
+      const sentResponse = await api.get('/request/getstudentrequests');
+      const sentData = sentResponse.data.body || [];
+      console.log('Sent bookings fetched:', sentData.length);
       
-      setBookingsData(data);
+      // Fetch received bookings (only if tutor AND shouldFetchReceived is true)
+      let receivedData: Booking[] = [];
+      if (shouldFetchReceived) {
+        console.log('Fetching received bookings...');
+        const receivedResponse = await api.get('/request/getrequests');
+        receivedData = receivedResponse.data.body || [];
+        console.log('Received bookings fetched:', receivedData.length);
+      } else {
+        console.log('Skipping received bookings fetch (shouldFetchReceived:', shouldFetchReceived, ')');
+      }
+      
+      // Fetch upcoming sessions for both
+      const sessionsResponse = await api.get('/request/upcoming-sessions');
+      const sessionsData = sessionsResponse.data.body || [];
 
-    } catch (error: any) {
-      console.error("❌ Error fetching bookings:", error);
+      // Process sent bookings with session info
+      const processedSentBookings = sentData.map((booking: Booking) => {
+        const session = sessionsData.find((s: Session) => 
+          s._id === booking.sessionId || 
+          (s.studentId === booking.studentId && s.tutorId === booking.tutorId && 
+           new Date(s.sessionDate).getTime() === new Date(booking.sessionDate).getTime())
+        );
+        
+        return {
+          ...booking,
+          session,
+          sessionId: session?._id || booking.sessionId,
+          sessionEndTime: session ? calculateSessionEndTime(session.sessionDate, session.duration) : undefined,
+          isInProgress: session?.status === 'in-progress',
+          canStart: session ? canStartSession(session) : false,
+          timeUntil: session ? calculateTimeUntil(session.sessionDate) : undefined
+        };
+      });
+
+      // Process received bookings with session info
+      const processedReceivedBookings = receivedData.map((booking: Booking) => {
+        const session = sessionsData.find((s: Session) => 
+          s._id === booking.sessionId || 
+          (s.studentId === booking.studentId && s.tutorId === booking.tutorId && 
+           new Date(s.sessionDate).getTime() === new Date(booking.sessionDate).getTime())
+        );
+        
+        return {
+          ...booking,
+          session,
+          sessionId: session?._id || booking.sessionId,
+          sessionEndTime: session ? calculateSessionEndTime(session.sessionDate, session.duration) : undefined,
+          isInProgress: session?.status === 'in-progress',
+          canStart: session ? canStartSession(session) : false,
+          timeUntil: session ? calculateTimeUntil(session.sessionDate) : undefined
+        };
+      });
+
+      setSentBookings(processedSentBookings);
+      setReceivedBookings(processedReceivedBookings);
+      setUpcomingSessions(sessionsData);
+
+    } catch (err: any) {
+      console.error('Error fetching bookings:', err);
+      setSentError(err.response?.data?.message || 'Failed to fetch sent bookings');
+      if (shouldFetchReceived) {
+        setReceivedError(err.response?.data?.message || 'Failed to fetch received bookings');
+      }
       toast({
-        title: "Error loading bookings",
-        description: "Failed to load your bookings. Please try again.",
-        variant: "destructive",
+        title: "Error",
+        description: "Failed to load bookings",
+        variant: "destructive"
       });
     } finally {
       setLoading(false);
     }
+  }, [toast]);
+
+  // Helper functions
+  const calculateSessionEndTime = (sessionDate: Date, duration: number): Date => {
+    return new Date(new Date(sessionDate).getTime() + duration * 60000);
   };
 
-  const joinMeeting = (roomId: string) => {
-    window.open(`/meeting/${roomId}`, '_blank', 'noopener,noreferrer')
-  }
+  const calculateTimeUntil = (sessionDate: Date) => {
+    const now = new Date();
+    const timeUntil = new Date(sessionDate).getTime() - now.getTime();
+    const hours = Math.floor(timeUntil / (1000 * 60 * 60));
+    const minutes = Math.floor((timeUntil % (1000 * 60 * 60)) / (1000 * 60));
+    
+    return {
+      hours,
+      minutes,
+      formatted: `${hours}h ${minutes}m`
+    };
+  };
 
+  const canStartSession = (session: Session): boolean => {
+    const now = new Date();
+    const sessionStart = new Date(session.sessionDate);
+    const fifteenMinutesBefore = new Date(sessionStart.getTime() - 15 * 60000);
+    
+    return now >= fifteenMinutesBefore && 
+           now <= sessionStart && 
+           (session.status === 'upcoming' || session.status === 'scheduled');
+  };
+
+  // Update booking status
   const updateBookingStatus = async (
-    id: string, 
-    status?: Booking["status"], 
-    tutorComment?: string,
+    bookingId: string, 
+    status?: string, 
+    tutorComment?: string, 
     comment?: string
-  ): Promise<void> => {
+  ) => {
+    setUpdatingStatus(true);
     try {
-      setUpdatingStatus(true);
-
-      // Show appropriate loading message
-      if (status === 'cancelled') {
-        toast({
-          title: "Cancelling booking...",
-          description: "Please wait while we process your request",
-        });
-      } else if (comment !== undefined) {
-        toast({
-          title: "Updating comment...",
-          description: "Please wait while we save your note",
-        });
-      } else {
-        toast({
-          title: "Updating booking...",
-          description: "Please wait while we process your request",
-        });
-      }
-
-      const existingSentBooking = bookingsData.sentBookings.find(b => b._id === id);
-      const existingReceivedBooking = bookingsData.receivedBookings.find(b => b._id === id);
-      const existingBooking = existingSentBooking || existingReceivedBooking;
-
-      if (!existingBooking) {
-        throw new Error("Booking not found in local state");
-      }
-
-      const updatedBooking = await bookingsService.updateBookingStatus(id, status, tutorComment, comment);
-
-      const mergedBooking = {
-        ...existingBooking,
-        ...updatedBooking, 
-        status: updatedBooking.status || existingBooking.status,
-        tutorComment: updatedBooking.tutorComment !== undefined ? updatedBooking.tutorComment : existingBooking.tutorComment,
-        comment: updatedBooking.comment !== undefined ? updatedBooking.comment : existingBooking.comment,
-        updatedAt: updatedBooking.updatedAt,
-        meetingId: updatedBooking.meetingId || existingBooking.meetingId,
-        roomId: updatedBooking.roomId || existingBooking.roomId,
-        meetingUrl: updatedBooking.meetingUrl || existingBooking.meetingUrl
-      };
-
-      // Update state with merged data
-      setBookingsData(prev => ({
-        ...prev,
-        sentBookings: prev.sentBookings.map(booking =>
-          booking._id === id ? mergedBooking : booking
-        ),
-        receivedBookings: prev.receivedBookings.map(booking =>
-          booking._id === id ? mergedBooking : booking
-        ),
-      }));
-
-      // Show success toast based on action
-      let toastTitle = "";
-      let toastDescription = "";
-      
-      if (status === 'cancelled') {
-        toastTitle = "Booking Cancelled";
-        toastDescription = "Your booking has been cancelled successfully";
-      } else if (status === 'accepted') {
-        toastTitle = "Booking Accepted! 🎉";
-        toastDescription = "Meeting room has been created for online sessions";
-      } else if (status === 'rejected') {
-        toastTitle = "Booking Declined";
-        toastDescription = "The booking request has been declined";
-      } else if (status === 'completed') {
-        toastTitle = "Booking Completed";
-        toastDescription = "The session has been marked as completed";
-      } else if (comment !== undefined) {
-        toastTitle = "Comment Updated";
-        toastDescription = "Your note has been updated successfully";
-      } else {
-        toastTitle = "Update Successful";
-        toastDescription = "Booking has been updated successfully";
-      }
-      
-      toast({
-        title: toastTitle,
-        description: toastDescription,
+      const response = await api.put(`/request/updaterequeststatus/${bookingId}`, {
+        status,
+        tutorComment,
+        comment
       });
 
-    } catch (error: any) {
-      console.error("Error updating booking:", error);
-      
-      let errorMessage = "Failed to update booking";
-      if (error.message) {
-        errorMessage = error.message;
-      }
-      
       toast({
-        title: "Update Failed",
-        description: errorMessage,
-        variant: "destructive",
+        title: "Success",
+        description: response.data.message || "Booking updated successfully",
       });
-      throw error;
+
+      // Refresh bookings data
+      await refetchBookings();
+      
+      return response.data;
+    } catch (err: any) {
+      console.error('Error updating booking:', err);
+      toast({
+        title: "Error",
+        description: err.response?.data?.message || "Failed to update booking",
+        variant: "destructive"
+      });
+      throw err;
     } finally {
       setUpdatingStatus(false);
     }
   };
 
+  // Start a session
+  const startSession = async (sessionId: string) => {
+    try {
+      const response = await api.post(`/request/start-session/${sessionId}`);
+      
+      toast({
+        title: "Session Started",
+        description: "The session has been marked as in-progress",
+      });
+
+      // Refresh bookings to update status
+      await refetchBookings();
+      
+      return response.data;
+    } catch (err: any) {
+      console.error('Error starting session:', err);
+      toast({
+        title: "Error",
+        description: err.response?.data?.message || "Failed to start session",
+        variant: "destructive"
+      });
+      throw err;
+    }
+  };
+
+  // Evaluate a session
+  const evaluateSession = async (
+    sessionId: string, 
+    status: 'completed' | 'no-show', 
+    rating?: number, 
+    review?: string,
+    noShowParty?: string
+  ) => {
+    try {
+      const response = await api.post(`/request/evaluate-session/${sessionId}`, {
+        status,
+        rating,
+        review,
+        noShowParty
+      });
+
+      toast({
+        title: "Session Evaluated",
+        description: response.data.message || "Session evaluation submitted",
+      });
+
+      // Refresh bookings data
+      await refetchBookings();
+      
+      return response.data;
+    } catch (err: any) {
+      console.error('Error evaluating session:', err);
+      toast({
+        title: "Error",
+        description: err.response?.data?.message || "Failed to evaluate session",
+        variant: "destructive"
+      });
+      throw err;
+    }
+  };
+
+  // Join meeting
+  const joinMeeting = (booking: BookingWithSession) => {
+    if (booking.meetingUrl) {
+      window.open(booking.meetingUrl, '_blank');
+    } else if (booking.session?.meetingUrl) {
+      window.open(booking.session.meetingUrl, '_blank');
+    } else {
+      toast({
+        title: "No Meeting Link",
+        description: "Meeting link is not available yet",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Refetch bookings with proper tutor status
+  const refetchBookings = useCallback(async () => {
+    console.log('Refetching with isTutor:', isTutor);
+    await fetchBookings(isTutor === true);
+  }, [fetchBookings, isTutor]);
+
+  // Initial fetch when tutor status is loaded
   useEffect(() => {
-    fetchBookings();
-  }, []);
+    if (isTutor !== null && !tutorStatusLoading) {
+      console.log('Fetching bookings with tutor status:', isTutor);
+      fetchBookings(isTutor === true);
+    }
+  }, [isTutor, tutorStatusLoading, fetchBookings]);
 
   return {
-    ...bookingsData,
-    loading,
+    sentBookings,
+    receivedBookings,
+    upcomingSessions,
+    isTutor, // Now returns null, false, or true
+    tutorStatusLoading, // Use this to show loading state for tutor status
+    loading, // Use this for bookings loading
+    updatingStatus,
     sentError,
     receivedError,
-    updatingStatus,
-    joinMeeting,
-    refetchBookings: fetchBookings,
+    refetchBookings,
     updateBookingStatus,
+    startSession,
+    evaluateSession,
+    joinMeeting,
   };
 };
