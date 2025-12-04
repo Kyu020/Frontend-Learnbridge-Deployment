@@ -36,7 +36,6 @@ export default function TutorsPage() {
     bio: "",
     course: "",
     hourlyRate: "",
-    availability: "",
     availabilitySlots: [],
     credentials: "",
     teachingLevel: "beginner",
@@ -49,7 +48,6 @@ export default function TutorsPage() {
     bio: "",
     course: "",
     hourlyRate: "",
-    availability: "",
     availabilitySlots: [],
     credentials: "",
     teachingLevel: "beginner", // Changed from "" to "beginner"
@@ -114,7 +112,7 @@ export default function TutorsPage() {
     try {
       for (const tutor of tutors) {
         try {
-          const url = `http://localhost:5000/api/credibility/tutor/${tutor.studentId}`
+          const url = `https://backend-learnbridge.onrender.com/api/credibility/tutor/${tutor.studentId}`
           console.log(`Fetching credibility from: ${url}`)
           
           const response = await fetch(url, {
@@ -173,7 +171,6 @@ export default function TutorsPage() {
         bio: "",
         course: "",
         hourlyRate: "",
-        availability: "",
         availabilitySlots: [],
         credentials: "",
         teachingLevel: "beginner",
@@ -204,7 +201,6 @@ export default function TutorsPage() {
           ? profile.course.join(", ") 
           : profile.course || "",
         hourlyRate: profile.hourlyRate?.toString() || "",
-        availability: "",
         availabilitySlots: Array.isArray(profile.availabilitySlots) 
           ? profile.availabilitySlots 
           : [],
