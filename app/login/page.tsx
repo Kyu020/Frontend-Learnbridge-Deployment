@@ -33,7 +33,7 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      const response = await api.post("/api/auth/login", { studentId, password });
+      const response = await api.post("/auth/login", { studentId, password });
       const { token, user } = response.data;
 
       if (!token) throw new Error("Token not received");
@@ -66,7 +66,7 @@ export default function LoginPage() {
               <span className="text-xl font-bold">LearnBridge</span>
             </div>
             <h1 className="text-3xl font-bold text-white mb-3">Welcome back!</h1>
-            <p className="text-blue-100">Continue your learning journey with student tutors and shared resources.</p>
+            <p className="text-blue-100">Continue your learning journey with GC-CCS student tutors and shared resources.</p>
           </div>
           <div className="space-y-3 text-blue-100 text-sm">
             <div className="flex items-center gap-2">

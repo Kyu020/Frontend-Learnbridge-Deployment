@@ -16,6 +16,9 @@ export const metadata: Metadata = {
   title: "LearnBridge - Your Learning Platform",
   description: "Connect with expert tutors and access quality learning resources",
   generator: "Satoshii",
+  icons: {
+    icon: "/logo.jpg",
+  }
 }
 
 export default function RootLayout({
