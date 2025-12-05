@@ -33,6 +33,7 @@ export const ScheduleDialog = ({
   getMinDate,
   getMinTime
 }: ScheduleDialogProps) => {
+
   // Validation constants
   const MINIMUM_DURATION = 60; // 1 hour in minutes
   const MAXIMUM_DURATION = 480; // 8 hours in minutes
@@ -201,6 +202,50 @@ export const ScheduleDialog = ({
     );
   };
 
+  // Get available days (next 14 days) that match tutor's schedule
+  const getAvailableDays = () => {
+    const days = [];
+    const today = new Date();
+    
+    // Get the tutor's available days from availabilitySlots
+    const availableDaysSet = new Set<string>();
+    if (tutor?.availabilitySlots) {
+      tutor.availabilitySlots.forEach(slot => {
+        if (slot.isActive) {
+          availableDaysSet.add(slot.dayOfWeek);
+        }
+      });
+    }
+    
+    // Check next 14 days
+    for (let i = 0; i < 14; i++) {
+      const date = new Date(today);
+      date.setDate(date.getDate() + i);
+      const dateString = date.toISOString().split('T')[0];
+      const dayOfWeek = getDayOfWeek(dateString);
+      
+      // Only include if this day is in tutor's availability
+      if (availableDaysSet.has(dayOfWeek)) {
+        const availableSlots = getAvailableTimesForDate(dateString);
+        
+        // Only add if there are actually available slots for this date
+        if (availableSlots.length > 0) {
+          days.push({
+            date: dateString,
+            dayOfWeek,
+            dayName: date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+            availableSlots
+          });
+        }
+      }
+    }
+    
+    return days;
+  };
+
+  const availableDays = getAvailableDays();
+
+
   // Get week of available slots
   const getWeekAvailability = () => {
     const days = [];
@@ -231,7 +276,6 @@ export const ScheduleDialog = ({
       sessionTime: startTime
     });
   };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (isFormValid()) {
@@ -302,37 +346,48 @@ export const ScheduleDialog = ({
           {/* Week Availability Selector */}
           <div>
             <Label className="text-sm mb-2 block">Pick a Slot *</Label>
-            <div className="grid grid-cols-7 gap-1 max-h-40 overflow-y-auto border rounded p-2 bg-gray-50">
-              {getWeekAvailability().map((day) => (
-                <div key={day.date} className="flex flex-col gap-0.5">
-                  <div className="text-xs font-semibold text-center text-gray-600 truncate px-1">
-                    {day.dayName.split(' ')[0]}
+            
+            {availableDays.length === 0 ? (
+              <div className="p-4 text-center bg-gray-50 rounded border">
+                <p className="text-sm text-gray-600">No available slots in the next two weeks</p>
+                <p className="text-xs text-gray-500 mt-1">Check back later or contact the tutor</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-60 overflow-y-auto border rounded p-2 bg-gray-50">
+                {availableDays.map((day) => (
+                  <div key={day.date} className="flex flex-col gap-1">
+                    <div className="text-xs font-semibold text-center text-gray-600 truncate px-1">
+                      {day.dayName}
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      {day.availableSlots.length > 0 ? (
+                        day.availableSlots.map((slot, idx) => (
+                          <button
+                            key={`${day.date}-${idx}`}
+                            type="button"
+                            onClick={() => handleSelectSlot(day.date, slot.start)}
+                            className={`text-xs py-1 px-1 rounded font-medium transition-colors ${
+                              formData.sessionDate === day.date && formData.sessionTime === slot.start
+                                ? "bg-blue-600 text-white"
+                                : "bg-white border border-gray-300 text-gray-700 hover:bg-blue-50"
+                            }`}
+                          >
+                            {slot.start}
+                          </button>
+                        ))
+                      ) : (
+                        <div className="text-xs text-gray-400 text-center py-1">—</div>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex flex-col gap-0.5">
-                    {day.availableSlots.length > 0 ? (
-                      day.availableSlots.map((slot, idx) => (
-                        <button
-                          key={`${day.date}-${idx}`}
-                          type="button"
-                          onClick={() => handleSelectSlot(day.date, slot.start)}
-                          className={`text-xs py-1 px-1 rounded font-medium transition-colors ${
-                            formData.sessionDate === day.date && formData.sessionTime === slot.start
-                              ? "bg-blue-600 text-white"
-                              : "bg-white border border-gray-300 text-gray-700 hover:bg-blue-50"
-                          }`}
-                        >
-                          {slot.start}
-                        </button>
-                      ))
-                    ) : (
-                      <div className="text-xs text-gray-400 text-center py-1">—</div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
+            
             {formData.sessionDate && formData.sessionTime && (
-              <p className="text-xs text-green-600 mt-1">✓ Selected: {formData.sessionDate} @ {formData.sessionTime}</p>
+              <p className="text-xs text-green-600 mt-1">
+                ✓ Selected: {formData.sessionDate} @ {formData.sessionTime}
+              </p>
             )}
           </div>
 
@@ -341,6 +396,7 @@ export const ScheduleDialog = ({
               ⚠️ {getTimeError()}
             </div>
           )}
+
 
           {/* Duration & Price */}
           <div className="grid grid-cols-2 gap-3">
